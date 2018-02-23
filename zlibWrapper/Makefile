@@ -10,6 +10,7 @@
 ZLIB_LIBRARY ?= -lz
 ZLIB_PATH ?= .
 
+MOREFLAGS=-DZWRAP_USE_ZSTD=1 -fPIC
 ZSTDLIBDIR = ../lib
 ZSTDLIBRARY = $(ZSTDLIBDIR)/libzstd.a
 ZLIBWRAPPER_PATH = .
@@ -20,7 +21,7 @@ TEST_FILE = ../doc/zstd_compression_format.md
 
 CPPFLAGS = -DXXH_NAMESPACE=ZSTD_ -I$(ZLIB_PATH) -I$(PROGRAMS_PATH)       \
            -I$(ZSTDLIBDIR) -I$(ZSTDLIBDIR)/common -I$(ZLIBWRAPPER_PATH)
-CFLAGS  ?= $(MOREFLAGS) -O3 -std=gnu99
+CFLAGS  ?= $(MOREFLAGS) -g -std=gnu99 #-O3
 CFLAGS  += -Wall -Wextra -Wcast-qual -Wcast-align -Wshadow -Wswitch-enum \
            -Wdeclaration-after-statement -Wstrict-prototypes -Wundef     \
            -Wstrict-aliasing=1

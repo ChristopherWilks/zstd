@@ -13,6 +13,7 @@
 #ifndef ZWRAP_USE_ZSTD
     #define ZWRAP_USE_ZSTD 0
 #endif
+#define ZWRAP_USE_ZSTD 1
 
 
 /* ===   Dependencies   === */
@@ -107,7 +108,7 @@ static size_t ZWRAP_freeCCtx(ZWRAP_CCtx* zwc)
 {
     if (zwc==NULL) return 0;   /* support free on NULL */
     ZSTD_freeCStream(zwc->zbc);
-    ZSTD_free(zwc, zwc->customMem);
+    //ZSTD_free(zwc, zwc->customMem);
     return 0;
 }
 
@@ -183,6 +184,7 @@ int ZWRAP_setPledgedSrcSize(z_streamp strm, unsigned long long pledgedSrcSize)
 ZEXTERN int ZEXPORT z_deflateInit_ OF((z_streamp strm, int level,
                                      const char *version, int stream_size))
 {
+	//fprintf(stderr,"z_deflateInit_\n");
     ZWRAP_CCtx* zwc;
 
     LOG_WRAPPERC("- deflateInit level=%d\n", level);
@@ -212,6 +214,7 @@ ZEXTERN int ZEXPORT z_deflateInit2_ OF((z_streamp strm, int level, int method,
                                       int strategy, const char *version,
                                       int stream_size))
 {
+	//fprintf(stderr,"z_deflateInit2_\n");
     if (!g_ZWRAP_useZSTDcompression)
         return deflateInit2_(strm, level, method, windowBits, memLevel, strategy, version, stream_size);
 
@@ -477,8 +480,8 @@ static size_t ZWRAP_freeDCtx(ZWRAP_DCtx* zwd)
 {
     if (zwd==NULL) return 0;   /* support free on null */
     ZSTD_freeDStream(zwd->zbd);
-    ZSTD_free(zwd->version, zwd->customMem);
-    ZSTD_free(zwd, zwd->customMem);
+    //ZSTD_free(zwd->version, zwd->customMem);
+    //ZSTD_free(zwd, zwd->customMem);
     return 0;
 }
 
@@ -1103,3 +1106,161 @@ ZEXTERN const z_crc_t FAR * ZEXPORT z_get_crc_table    OF((void))
     return get_crc_table();
 }
 #endif
+ZEXTERN int ZEXPORT deflateInit_ OF((z_streamp strm, int level,
+                                     const char *version, int stream_size))
+{
+	return z_deflateInit_(strm, level, version, stream_size);
+}
+ZEXTERN int ZEXPORT deflateInit2_ OF((z_streamp strm, int level, int method,
+                                      int windowBits, int memLevel,
+                                      int strategy, const char *version,
+                                      int stream_size))
+{
+	return z_deflateInit2_(strm, level, method, windowBits, memLevel, strategy, version, stream_size);
+}
+ZEXTERN int ZEXPORT deflateReset OF((z_streamp strm))
+{
+	return z_deflateReset(strm);
+}
+ZEXTERN int ZEXPORT deflateSetDictionary OF((z_streamp strm,
+                                             const Bytef *dictionary,
+                                             uInt  dictLength))
+{
+	return z_deflateSetDictionary(strm, dictionary, dictLength);
+}
+ZEXTERN int ZEXPORT deflate OF((z_streamp strm, int flush))
+{
+	return z_deflate(strm, flush);
+}
+ZEXTERN int ZEXPORT deflateEnd OF((z_streamp strm))
+{
+	return z_deflateEnd(strm);
+}
+ZEXTERN int ZEXPORT deflateParams OF((z_streamp strm,
+                                      int level,
+                                      int strategy))
+{
+	return z_deflateParams(strm, level, strategy);
+}
+ZEXTERN int ZEXPORT inflateInit_ OF((z_streamp strm,
+                                     const char *version, int stream_size))
+{
+	return z_inflateInit_(strm, version, stream_size);
+}
+ZEXTERN int ZEXPORT inflateInit2_ OF((z_streamp strm, int  windowBits,
+                                      const char *version, int stream_size))
+{
+	return z_inflateInit2_(strm, windowBits, version, stream_size);
+}
+ZEXTERN int ZEXPORT inflateReset OF((z_streamp strm))
+{
+	return z_inflateReset(strm);
+}
+ZEXTERN int ZEXPORT inflateReset2 OF((z_streamp strm,
+                                      int windowBits))
+{
+	return z_inflateReset2(strm, windowBits);
+}
+ZEXTERN int ZEXPORT inflateSetDictionary OF((z_streamp strm,
+                                             const Bytef *dictionary,
+                                             uInt  dictLength))
+{
+	return z_inflateSetDictionary(strm, dictionary, dictLength);
+}
+ZEXTERN int ZEXPORT inflate OF((z_streamp strm, int flush))
+{
+	return z_inflate(strm, flush);
+}
+ZEXTERN int ZEXPORT inflateEnd OF((z_streamp strm))
+{
+	return z_inflateEnd(strm);
+}
+ZEXTERN int ZEXPORT inflateSync OF((z_streamp strm))
+{
+	return z_inflateSync(strm);
+}
+ZEXTERN int ZEXPORT deflateCopy OF((z_streamp dest,
+                                    z_streamp source))
+{
+	return z_deflateCopy(dest, source);
+}
+ZEXTERN int ZEXPORT deflateTune OF((z_streamp strm,
+                                    int good_length,
+                                    int max_lazy,
+                                    int nice_length,
+                                    int max_chain))
+{
+	return z_deflateTune(strm, good_length, max_lazy, nice_length, max_chain);
+}
+ZEXTERN int ZEXPORT deflatePending OF((z_streamp strm,
+                                       unsigned *pending,
+                                       int *bits))
+{
+	return z_deflatePending(strm, pending, bits);
+}
+ZEXTERN int ZEXPORT deflatePrime OF((z_streamp strm,
+                                     int bits,
+                                     int value))
+{
+	return z_deflatePrime(strm, bits, value);
+}
+ZEXTERN int ZEXPORT deflateSetHeader OF((z_streamp strm,
+                                         gz_headerp head))
+{
+	return z_deflateSetHeader(strm, head);
+}
+ZEXTERN int ZEXPORT inflateGetDictionary OF((z_streamp strm,
+                                             Bytef *dictionary,
+                                             uInt  *dictLength))
+{
+	return z_inflateGetDictionary(strm, dictionary, dictLength);
+}
+ZEXTERN int ZEXPORT inflateCopy OF((z_streamp dest,
+                                    z_streamp source))
+{
+	return z_inflateCopy(dest, source);
+}
+ZEXTERN int ZEXPORT inflatePrime OF((z_streamp strm,
+                                     int bits,
+                                     int value))
+{
+	return z_inflatePrime(strm, bits, value);
+}
+ZEXTERN int ZEXPORT inflateGetHeader OF((z_streamp strm,
+                                         gz_headerp head))
+{
+	return z_inflateGetHeader(strm, head);
+}
+ZEXTERN int ZEXPORT inflateBackInit_ OF((z_streamp strm, int windowBits,
+                                         unsigned char FAR *window,
+                                         const char *version,
+                                         int stream_size))
+{
+	return z_inflateBackInit_(strm, windowBits, window, version, stream_size);
+}
+ZEXTERN int ZEXPORT inflateBack OF((z_streamp strm,
+                                    in_func in, void FAR *in_desc,
+                                    out_func out, void FAR *out_desc))
+{
+	return z_inflateBack(strm, in, in_desc, out, out_desc);
+}
+ZEXTERN int ZEXPORT inflateBackEnd OF((z_streamp strm))
+{
+	return z_inflateBackEnd(strm);
+}
+ZEXTERN int ZEXPORT compress OF((Bytef *dest,   uLongf *destLen,
+                                 const Bytef *source, uLong sourceLen))
+{
+	return z_compress(dest, destLen, source, sourceLen);
+}
+ZEXTERN int ZEXPORT compress2 OF((Bytef *dest,   uLongf *destLen,
+                                  const Bytef *source, uLong sourceLen,
+                                  int level))
+{
+	return z_compress2(dest, destLen, source, sourceLen, level);
+}
+ZEXTERN int ZEXPORT uncompress OF((Bytef *dest,   uLongf *destLen,
+                                   const Bytef *source, uLong sourceLen))
+{
+	return z_uncompress(dest, destLen, source, sourceLen);
+}
