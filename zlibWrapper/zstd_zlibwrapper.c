@@ -14,7 +14,6 @@
     #define ZWRAP_USE_ZSTD 0
 #endif
 
-
 /* ===   Dependencies   === */
 #include <stdlib.h>
 #include <stdio.h>                 /* vsprintf */
@@ -107,7 +106,7 @@ static size_t ZWRAP_freeCCtx(ZWRAP_CCtx* zwc)
 {
     if (zwc==NULL) return 0;   /* support free on NULL */
     ZSTD_freeCStream(zwc->zbc);
-    //ZSTD_free(zwc, zwc->customMem);
+    ZSTD_free(zwc, zwc->customMem);
     return 0;
 }
 
@@ -183,7 +182,6 @@ int ZWRAP_setPledgedSrcSize(z_streamp strm, unsigned long long pledgedSrcSize)
 ZEXTERN int ZEXPORT z_deflateInit_ OF((z_streamp strm, int level,
                                      const char *version, int stream_size))
 {
-	//fprintf(stderr,"z_deflateInit_\n");
     ZWRAP_CCtx* zwc;
 
     LOG_WRAPPERC("- deflateInit level=%d\n", level);
@@ -213,7 +211,6 @@ ZEXTERN int ZEXPORT z_deflateInit2_ OF((z_streamp strm, int level, int method,
                                       int strategy, const char *version,
                                       int stream_size))
 {
-	//fprintf(stderr,"z_deflateInit2_\n");
     if (!g_ZWRAP_useZSTDcompression)
         return deflateInit2_(strm, level, method, windowBits, memLevel, strategy, version, stream_size);
 
@@ -479,8 +476,8 @@ static size_t ZWRAP_freeDCtx(ZWRAP_DCtx* zwd)
 {
     if (zwd==NULL) return 0;   /* support free on null */
     ZSTD_freeDStream(zwd->zbd);
-    //ZSTD_free(zwd->version, zwd->customMem);
-    //ZSTD_free(zwd, zwd->customMem);
+    ZSTD_free(zwd->version, zwd->customMem);
+    ZSTD_free(zwd, zwd->customMem);
     return 0;
 }
 
@@ -1106,7 +1103,7 @@ ZEXTERN const z_crc_t FAR * ZEXPORT z_get_crc_table    OF((void))
 }
 #endif
 
-
+//for making a LD_PRELOAD dynamic library to silently translate zlib calls to zstd calls
 #ifdef ZWRAP_USE_ZSTD
 	ZEXTERN int ZEXPORT deflateInit_ OF((z_streamp strm, int level,
 					     const char *version, int stream_size))
