@@ -81,10 +81,10 @@ ifneq (,$(filter Windows%,$(OS)))
 	@$(CC) $(FLAGS) -DZSTD_DLL_EXPORT=1 -shared $^ -o dll\libzstd.dll
 	dlltool -D dll\libzstd.dll -d dll\libzstd.def -l dll\libzstd.lib
 else
-	@$(CC) $(FLAGS) $^ $(LDFLAGS) $(SONAME_FLAGS) -o $@
-	@echo creating versioned links
-	@ln -sf $@ libzstd.$(SHARED_EXT_MAJOR)
-	@ln -sf $@ libzstd.$(SHARED_EXT)
+	$(CC) $(FLAGS) $^ $(LDFLAGS) $(SONAME_FLAGS) -o $@
+	echo creating versioned links
+	ln -sf $@ libzstd.$(SHARED_EXT_MAJOR)
+	ln -sf $@ libzstd.$(SHARED_EXT)
 endif
 
 libzstd : $(LIBZSTD)
