@@ -7,7 +7,7 @@
 
 # Paths to static and dynamic zlib and zstd libraries
 # Use "make ZLIB_PATH=path/to/zlib ZLIB_LIBRARY=path/to/libz.a" to select a path to library
-ZLIB_LIBRARY ?= -lz
+ZLIB_LIBRARY ?= -lz -ldl
 ZLIB_PATH ?= .
 
 MOREFLAGS=-fPIC
