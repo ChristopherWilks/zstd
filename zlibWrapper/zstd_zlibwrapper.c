@@ -14,6 +14,10 @@
     #define ZWRAP_USE_ZSTD 0
 #endif
 
+/* ===   Needed for LD_PRELOAD functionality   === */
+#define _GNU_SOURCE
+#include <dlfcn.h>
+
 /* ===   Dependencies   === */
 #include <stdlib.h>
 #include <stdio.h>                 /* vsprintf */
@@ -1166,14 +1170,34 @@ ZEXTERN const z_crc_t FAR * ZEXPORT z_get_crc_table    OF((void))
 	{
 		return z_inflateSetDictionary(strm, dictionary, dictLength);
 	}
-	ZEXTERN int ZEXPORT inflate OF((z_streamp strm, int flush))
+typedef int (*orig_inflate)(z_streamp strm, int flush);
+orig_inflate zlib_inflate;
+ZEXTERN int ZEXPORT inflate OF((z_streamp strm, int flush))
+{
+	if(!zlib_inflate)
 	{
-		return z_inflate(strm, flush);
+		int r;
+		zlib_inflate = (orig_inflate) dlsym(RTLD_NEXT,"inflate");
+		r = z_inflate(strm, flush);
+		zlib_inflate = NULL;
+		return r;
 	}
-	ZEXTERN int ZEXPORT inflateEnd OF((z_streamp strm))
+	return zlib_inflate(strm, flush);
+}
+typedef int (*orig_inflateEnd)(z_streamp strm);
+orig_inflateEnd zlib_inflateEnd;
+ZEXTERN int ZEXPORT inflateEnd OF((z_streamp strm))
+{
+	if(!zlib_inflateEnd)
 	{
-		return z_inflateEnd(strm);
+		int r;
+		zlib_inflateEnd = (orig_inflateEnd) dlsym(RTLD_NEXT,"inflateEnd");
+		r = z_inflateEnd(strm);
+		zlib_inflateEnd = NULL;
+		return r;
 	}
+	return zlib_inflateEnd(strm);
+}
 	ZEXTERN int ZEXPORT inflateSync OF((z_streamp strm))
 	{
 		return z_inflateSync(strm);
