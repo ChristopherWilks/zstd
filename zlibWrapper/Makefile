@@ -10,7 +10,7 @@
 ZLIB_LIBRARY ?= -lz
 ZLIB_PATH ?= .
 
-MOREFLAGS=-DZWRAP_USE_ZSTD=1 -fPIC
+MOREFLAGS=-fPIC
 ZSTDLIBDIR = ../lib
 ZSTDLIBRARY = $(ZSTDLIBDIR)/libzstd.a
 ZLIBWRAPPER_PATH = .
@@ -35,7 +35,7 @@ EXT =
 endif
 
 
-all: fitblk example zwrapbench minigzip
+all: fitblk example zwrapbench minigzip $(ZSTDLIBDIR)/zstd_preload.so
 
 test: example fitblk example_zstd fitblk_zstd zwrapbench minigzip minigzip_zstd
 	./example
@@ -105,7 +105,9 @@ $(ZSTDLIBDIR)/libzstd.a:
 $(ZSTDLIBDIR)/libzstd.so:
 	$(MAKE) -C $(ZSTDLIBDIR) libzstd
 
+$(ZSTDLIBDIR)/zstd_preload.so: $(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper.o $(GZFILES)
+	$(CC) -shared $(MOREFLAGS) -L $(ZSTDLIBDIR) $(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper.o $(GZFILES) $(ZLIB_LIBRARY) -lzstd -o $(ZSTDLIBDIR)/zstd_preload.so
 
 clean:
-	-$(RM) $(ZLIBWRAPPER_PATH)/*.o $(EXAMPLE_PATH)/*.o *.o foo.gz example$(EXT) example_zstd$(EXT) fitblk$(EXT) fitblk_zstd$(EXT) zwrapbench$(EXT) minigzip$(EXT) minigzip_zstd$(EXT)
+	-$(RM) $(ZLIBWRAPPER_PATH)/*.o $(EXAMPLE_PATH)/*.o *.o foo.gz example$(EXT) example_zstd$(EXT) fitblk$(EXT) fitblk_zstd$(EXT) zwrapbench$(EXT) minigzip$(EXT) minigzip_zstd$(EXT) $(ZSTDLIBDIR)/zstd_preload.so
 	@echo Cleaning completed
