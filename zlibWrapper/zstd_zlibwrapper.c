@@ -15,8 +15,10 @@
 #endif
 
 /* ===   Needed for LD_PRELOAD functionality   === */
-#define _GNU_SOURCE
-#include <dlfcn.h>
+#if ZWRAP_USE_ZSTD && ZWRAP_PRELOAD
+    #define _GNU_SOURCE
+    #include <dlfcn.h>
+#endif
 
 /* ===   Dependencies   === */
 #include <stdlib.h>
@@ -1108,7 +1110,7 @@ ZEXTERN const z_crc_t FAR * ZEXPORT z_get_crc_table    OF((void))
 #endif
 
 //for making a LD_PRELOAD dynamic library to silently translate zlib calls to zstd calls
-#ifdef ZWRAP_USE_ZSTD
+#if ZWRAP_USE_ZSTD && ZWRAP_PRELOAD
 	ZEXTERN int ZEXPORT deflateInit_ OF((z_streamp strm, int level,
 					     const char *version, int stream_size))
 	{
@@ -1170,34 +1172,36 @@ ZEXTERN const z_crc_t FAR * ZEXPORT z_get_crc_table    OF((void))
 	{
 		return z_inflateSetDictionary(strm, dictionary, dictLength);
 	}
-typedef int (*orig_inflate)(z_streamp strm, int flush);
-orig_inflate zlib_inflate;
-ZEXTERN int ZEXPORT inflate OF((z_streamp strm, int flush))
-{
-	if(!zlib_inflate)
+	//special wrappers for recursive calls to the zlib versions of the functions 
+	//within the z_* functions
+	typedef int (*orig_inflate)(z_streamp strm, int flush);
+	orig_inflate zlib_inflate;
+	ZEXTERN int ZEXPORT inflate OF((z_streamp strm, int flush))
 	{
-		int r;
-		zlib_inflate = (orig_inflate) dlsym(RTLD_NEXT,"inflate");
-		r = z_inflate(strm, flush);
-		zlib_inflate = NULL;
-		return r;
+		if(!zlib_inflate)
+		{
+			int r;
+			zlib_inflate = (orig_inflate) dlsym(RTLD_NEXT,"inflate");
+			r = z_inflate(strm, flush);
+			zlib_inflate = NULL;
+			return r;
+		}
+		return zlib_inflate(strm, flush);
 	}
-	return zlib_inflate(strm, flush);
-}
-typedef int (*orig_inflateEnd)(z_streamp strm);
-orig_inflateEnd zlib_inflateEnd;
-ZEXTERN int ZEXPORT inflateEnd OF((z_streamp strm))
-{
-	if(!zlib_inflateEnd)
+	typedef int (*orig_inflateEnd)(z_streamp strm);
+	orig_inflateEnd zlib_inflateEnd;
+	ZEXTERN int ZEXPORT inflateEnd OF((z_streamp strm))
 	{
-		int r;
-		zlib_inflateEnd = (orig_inflateEnd) dlsym(RTLD_NEXT,"inflateEnd");
-		r = z_inflateEnd(strm);
-		zlib_inflateEnd = NULL;
-		return r;
+		if(!zlib_inflateEnd)
+		{
+			int r;
+			zlib_inflateEnd = (orig_inflateEnd) dlsym(RTLD_NEXT,"inflateEnd");
+			r = z_inflateEnd(strm);
+			zlib_inflateEnd = NULL;
+			return r;
+		}
+		return zlib_inflateEnd(strm);
 	}
-	return zlib_inflateEnd(strm);
-}
 	ZEXTERN int ZEXPORT inflateSync OF((z_streamp strm))
 	{
 		return z_inflateSync(strm);
@@ -1271,6 +1275,7 @@ ZEXTERN int ZEXPORT inflateEnd OF((z_streamp strm))
 	{
 		return z_inflateBackEnd(strm);
 	}
+#ifndef Z_SOLO
 	ZEXTERN int ZEXPORT compress OF((Bytef *dest,   uLongf *destLen,
 					 const Bytef *source, uLong sourceLen))
 	{
@@ -1287,4 +1292,5 @@ ZEXTERN int ZEXPORT inflateEnd OF((z_streamp strm))
 	{
 		return z_uncompress(dest, destLen, source, sourceLen);
 	}
+#endif /* !Z_SOLO */
 #endif

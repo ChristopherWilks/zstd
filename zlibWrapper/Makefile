@@ -7,10 +7,11 @@
 
 # Paths to static and dynamic zlib and zstd libraries
 # Use "make ZLIB_PATH=path/to/zlib ZLIB_LIBRARY=path/to/libz.a" to select a path to library
-ZLIB_LIBRARY ?= -lz -ldl
+ZLIB_LIBRARY ?= -lz
 ZLIB_PATH ?= .
 
 MOREFLAGS=-fPIC
+PRELOAD_LDFLAGS=-ldl -lzstd-preload
 ZSTDLIBDIR = ../lib
 ZSTDLIBRARY = $(ZSTDLIBDIR)/libzstd.a
 ZLIBWRAPPER_PATH = .
@@ -97,7 +98,10 @@ $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.o: $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c $
 	$(CC) $(CFLAGS) $(CPPFLAGS) -I. -c -o $@ $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c
 
 $(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper.o: $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) -DZWRAP_USE_ZSTD=1 -I. -c -o $@ $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -DZWRAP_USE_ZSTD=1 -I. -c -o $@ $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c 
+
+$(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper_preload.o: $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -DZWRAP_USE_ZSTD=1 -DZWRAP_PRELOAD=1 -I. -c -o $@ $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c
 
 $(ZSTDLIBDIR)/libzstd.a:
 	$(MAKE) -C $(ZSTDLIBDIR) libzstd.a
@@ -105,8 +109,10 @@ $(ZSTDLIBDIR)/libzstd.a:
 $(ZSTDLIBDIR)/libzstd.so:
 	$(MAKE) -C $(ZSTDLIBDIR) libzstd
 
-$(ZSTDLIBDIR)/zstd_preload.so: $(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper.o $(GZFILES)
-	$(CC) -shared $(MOREFLAGS) -L $(ZSTDLIBDIR) $(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper.o $(GZFILES) $(ZLIB_LIBRARY) -lzstd -o $(ZSTDLIBDIR)/zstd_preload.so
+
+$(ZSTDLIBDIR)/zstd_preload.so: $(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper_preload.o $(GZFILES)
+	#$(CC) -shared -L $(ZSTDLIBDIR) $(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper_preload.o $(GZFILES) $(ZLIB_LIBRARY) -lzstd $(PRELOAD_LDFLAGS) -o $(ZSTDLIBDIR)/zstd_preload.so
+	$(CC) -shared -L $(ZSTDLIBDIR) $(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper_preload.o $(GZFILES) $(ZLIB_LIBRARY) $(PRELOAD_LDFLAGS) -o $(ZSTDLIBDIR)/zstd_preload.so
 
 clean:
 	-$(RM) $(ZLIBWRAPPER_PATH)/*.o $(EXAMPLE_PATH)/*.o *.o foo.gz example$(EXT) example_zstd$(EXT) fitblk$(EXT) fitblk_zstd$(EXT) zwrapbench$(EXT) minigzip$(EXT) minigzip_zstd$(EXT) $(ZSTDLIBDIR)/zstd_preload.so
