@@ -1175,7 +1175,7 @@ ZEXTERN const z_crc_t FAR * ZEXPORT z_get_crc_table    OF((void))
 	//special wrappers for recursive calls to the zlib versions of the functions 
 	//within the z_* functions
 	typedef int (*orig_inflate)(z_streamp strm, int flush);
-	orig_inflate zlib_inflate;
+	static orig_inflate zlib_inflate;
 	ZEXTERN int ZEXPORT inflate OF((z_streamp strm, int flush))
 	{
 		if(!zlib_inflate)
@@ -1189,7 +1189,7 @@ ZEXTERN const z_crc_t FAR * ZEXPORT z_get_crc_table    OF((void))
 		return zlib_inflate(strm, flush);
 	}
 	typedef int (*orig_inflateEnd)(z_streamp strm);
-	orig_inflateEnd zlib_inflateEnd;
+	static orig_inflateEnd zlib_inflateEnd;
 	ZEXTERN int ZEXPORT inflateEnd OF((z_streamp strm))
 	{
 		if(!zlib_inflateEnd)
