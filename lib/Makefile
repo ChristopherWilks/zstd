@@ -60,7 +60,7 @@ endif
 LIBZSTD = libzstd.$(SHARED_EXT_VER)
 
 
-.PHONY: default all clean install uninstall
+.PHONY: default all clean install uninstall clean-libzstd libzstd-preload.so
 
 default: lib-release
 
@@ -86,6 +86,17 @@ else
 	ln -sf $@ libzstd.$(SHARED_EXT_MAJOR)
 	ln -sf $@ libzstd.$(SHARED_EXT)
 endif
+
+clean-libzstd :
+	rm $(LIBZSTD)
+
+libzstd-preload.so : CFLAGS += -DZWRAP_PRELOAD=1
+libzstd-preload.so : clean-libzstd
+libzstd-preload.so : $(LIBZSTD)
+
+libzstd-preload : libzstd-preload.so
+	@echo symlinking dynamic library as libzstd-preload
+	ln -s $(LIBZSTD) $@.so
 
 libzstd : $(LIBZSTD)
 

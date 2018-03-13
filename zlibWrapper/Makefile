@@ -100,7 +100,10 @@ $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.o: $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c $
 $(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper.o: $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -DZWRAP_USE_ZSTD=1 -I. -c -o $@ $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c 
 
-$(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper_preload.o: $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.h
+$(ZSTDLIBDIR)/libzstd-preload.so:
+	$(MAKE) libzstd-preload -C $(ZSTDLIBDIR)
+
+$(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper_preload.o: $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.h $(ZSTDLIBDIR)/libzstd-preload.so
 	$(CC) $(CFLAGS) $(CPPFLAGS) -DZWRAP_USE_ZSTD=1 -DZWRAP_PRELOAD=1 -I. -c -o $@ $(ZLIBWRAPPER_PATH)/zstd_zlibwrapper.c
 
 $(ZSTDLIBDIR)/libzstd.a:
@@ -109,9 +112,7 @@ $(ZSTDLIBDIR)/libzstd.a:
 $(ZSTDLIBDIR)/libzstd.so:
 	$(MAKE) -C $(ZSTDLIBDIR) libzstd
 
-
 $(ZSTDLIBDIR)/zstd_preload.so: $(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper_preload.o $(GZFILES)
-	#$(CC) -shared -L $(ZSTDLIBDIR) $(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper_preload.o $(GZFILES) $(ZLIB_LIBRARY) -lzstd $(PRELOAD_LDFLAGS) -o $(ZSTDLIBDIR)/zstd_preload.so
 	$(CC) -shared -L $(ZSTDLIBDIR) $(ZLIBWRAPPER_PATH)/zstdTurnedOn_zlibwrapper_preload.o $(GZFILES) $(ZLIB_LIBRARY) $(PRELOAD_LDFLAGS) -o $(ZSTDLIBDIR)/zstd_preload.so
 
 clean:

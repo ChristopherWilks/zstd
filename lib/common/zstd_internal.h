@@ -33,10 +33,12 @@
 #endif
 #include "xxhash.h"                /* XXH_reset, update, digest */
 
-#if defined(__GNUC__) && (__GNUC__ >= 4)
-#  define PUBLIC_API __attribute__ ((visibility ("default")))
-#else
-#  define PUBLIC_API
+#ifdef ZWRAP_PRELOAD
+#  if defined(__GNUC__) && (__GNUC__ >= 4)
+#    define PUBLIC_API __attribute__ ((visibility ("default")))
+#  else
+#    define PUBLIC_API
+#  endif
 #endif
 
 #if defined (__cplusplus)
@@ -240,9 +242,16 @@ const seqStore_t* ZSTD_getSeqStore(const ZSTD_CCtx* ctx);   /* compress & dictBu
 void ZSTD_seqToCodes(const seqStore_t* seqStorePtr);   /* compress, dictBuilder, decodeCorpus (shouldn't get its definition from here) */
 
 /* custom memory allocation functions */
-PUBLIC_API void* ZSTD_malloc(size_t size, ZSTD_customMem customMem);
-PUBLIC_API void* ZSTD_calloc(size_t size, ZSTD_customMem customMem);
-PUBLIC_API void ZSTD_free(void* ptr, ZSTD_customMem customMem);
+#ifdef ZWRAP_PRELOAD
+  PUBLIC_API void* ZSTD_malloc(size_t size, ZSTD_customMem customMem);
+  PUBLIC_API void* ZSTD_calloc(size_t size, ZSTD_customMem customMem);
+  PUBLIC_API void ZSTD_free(void* ptr, ZSTD_customMem customMem);
+#else
+  void* ZSTD_malloc(size_t size, ZSTD_customMem customMem);
+  void* ZSTD_calloc(size_t size, ZSTD_customMem customMem);
+  void ZSTD_free(void* ptr, ZSTD_customMem customMem);
+#endif
+
 
 
 MEM_STATIC U32 ZSTD_highbit32(U32 val)   /* compress, dictBuilder, decodeCorpus */
