@@ -189,6 +189,9 @@ ZEXTERN int ZEXPORT z_deflateInit_ OF((z_streamp strm, int level,
                                      const char *version, int stream_size))
 {
     ZWRAP_CCtx* zwc;
+#if ZWRAP_USE_ZSTD && ZWRAP_PRELOAD
+    const char* cl = getenv("_ZSTD_COMPRESSION_LEVEL");
+#endif
 
     LOG_WRAPPERC("- deflateInit level=%d\n", level);
     if (!g_ZWRAP_useZSTDcompression) {
@@ -204,6 +207,10 @@ ZEXTERN int ZEXPORT z_deflateInit_ OF((z_streamp strm, int level,
     zwc->streamEnd = 0;
     zwc->totalInBytes = 0;
     zwc->compressionLevel = level;
+#if ZWRAP_USE_ZSTD && ZWRAP_PRELOAD
+    if(cl)
+        zwc->compressionLevel = atoi(cl);
+#endif
     strm->state = (struct internal_state*) zwc; /* use state which in not used by user */
     strm->total_in = 0;
     strm->total_out = 0;
